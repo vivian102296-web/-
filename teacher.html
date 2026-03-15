@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>內部訓練簽到系統｜老師端</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#F4F1EC;--surface:#FFF;--ink:#1C1917;--ink2:#57534E;--ink3:#A8A29E;
+  --b:rgba(28,25,23,.14);--b2:rgba(28,25,23,.07);
+  --green:#1C4532;--gl:#D1FAE5;--gm:#059669;
+  --amber:#92400E;--al:#FEF3C7;
+  --shadow:0 1px 4px rgba(0,0,0,.08),0 8px 24px rgba(0,0,0,.06);
+}
+body{font-family:"Noto Sans TC",sans-serif;background:var(--bg);min-height:100vh;color:var(--ink);padding:20px 16px 60px}
+.wrap{max-width:1040px;margin:0 auto}
+.topbar{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:16px}
+.co{font-size:11px;font-family:"DM Mono",monospace;color:var(--ink3)}
+.steps{display:flex;align-items:center;gap:6px;font-size:11px;font-family:"DM Mono",monospace;color:var(--ink3)}
+.sd{width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0}
+.sd.done{background:var(--gm);color:#fff}.sd.on{background:var(--green);color:#fff}.sd.off{background:#D4D0CA;color:var(--ink2)}
+.grid{display:grid;grid-template-columns:300px 1fr;gap:18px;align-items:start}
+.card{background:var(--surface);border-radius:12px;border:1px solid var(--b);box-shadow:var(--shadow);overflow:hidden;margin-bottom:14px}
+.card:last-child{margin-bottom:0}
+.ch{padding:12px 18px;border-bottom:1px solid var(--b2);display:flex;align-items:center;justify-content:space-between}
+.ct{font-size:11px;font-weight:700;letter-spacing:.08em;color:var(--ink2);text-transform:uppercase;font-family:"DM Mono",monospace}
+.cb{padding:16px 18px}
+.gas{background:#FFFBF0;border:1px solid #F59E0B;border-radius:8px;padding:11px 13px;margin-bottom:4px}
+.gas-l{font-size:10px;font-weight:700;letter-spacing:.08em;color:#92400E;font-family:"DM Mono",monospace;margin-bottom:5px}
+.gas-i{width:100%;border:1px solid rgba(245,158,11,.4);border-radius:6px;padding:7px 9px;font-size:11px;font-family:"DM Mono",monospace;color:var(--ink);outline:none;background:#fff;display:block}
+.gas-i:focus{border-color:#F59E0B}
+.gas-h{font-size:10px;color:#92400E;margin-top:5px;line-height:1.6}
+.field{display:flex;flex-direction:column;gap:4px;margin-bottom:11px}
+.field:last-of-type{margin-bottom:0}
+.field label{font-size:10px;font-weight:500;letter-spacing:.10em;text-transform:uppercase;color:var(--ink3);font-family:"DM Mono",monospace}
+.field input{border:1px solid var(--b);border-radius:6px;padding:8px 10px;font-size:13px;color:var(--ink);outline:none;background:var(--bg);transition:border-color .15s}
+.field input:focus{border-color:var(--green);background:#fff}
+.field input::placeholder{color:var(--ink3);font-size:12px}
+.field input[readonly]{background:var(--bg);color:var(--ink2);pointer-events:none}
+.r2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.btn-main{width:100%;padding:10px;background:var(--green);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;font-family:"Noto Sans TC",sans-serif;cursor:pointer;margin-top:6px;letter-spacing:.04em;transition:background .15s,transform .1s}
+.btn-main:hover{background:#163d28}.btn-main:active{transform:scale(.98)}.btn-main:disabled{background:#bbb;cursor:not-allowed;transform:none}
+.btn-dl{width:100%;padding:8px;background:#1e3a5f;color:#fff;border:none;border-radius:6px;font-size:12px;font-weight:700;font-family:"Noto Sans TC",sans-serif;cursor:pointer;margin-top:8px;letter-spacing:.04em;transition:background .15s}
+.btn-dl:hover{background:#172d4a}
+.qr-area{display:flex;flex-direction:column;align-items:center;gap:10px;padding:16px 18px}
+.qr-box{background:#fff;padding:8px;border:1px solid var(--b);border-radius:8px}
+.qr-hint{font-size:11px;color:var(--ink3);text-align:center;font-family:"DM Mono",monospace}
+.sess{font-size:10px;font-family:"DM Mono",monospace;color:var(--ink3);background:var(--bg);padding:3px 10px;border-radius:20px;border:1px solid var(--b2)}
+.btn-copy{padding:5px 14px;border:1px solid var(--b);border-radius:20px;font-size:11px;background:var(--surface);color:var(--ink2);cursor:pointer;font-family:"DM Mono",monospace}
+.btn-copy:hover{background:var(--bg)}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:14px 18px}
+.stat{border-radius:8px;padding:10px 6px;text-align:center}
+.stat .n{font-size:24px;font-weight:700;font-family:"DM Mono",monospace}
+.stat .l{font-size:10px;letter-spacing:.08em;text-transform:uppercase;margin-top:3px;font-family:"DM Mono",monospace}
+.stat.g{background:var(--gl);color:#065F46}.stat.a{background:var(--al);color:var(--amber)}.stat.gr{background:#F5F5F4;color:var(--ink2)}
+.live{width:7px;height:7px;border-radius:50%;background:var(--gm);display:inline-block;animation:blink 1.6s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+.tcard{background:var(--surface);border-radius:12px;border:1px solid var(--b);box-shadow:var(--shadow);overflow:hidden}
+.thead2{padding:13px 18px;border-bottom:1px solid var(--b2);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px}
+.ttitle{font-size:15px;font-weight:700}
+.tsub{font-size:11px;color:var(--ink3);font-family:"DM Mono",monospace;margin-top:3px}
+.acts{display:flex;gap:7px;flex-wrap:wrap}
+.bs{padding:6px 12px;border-radius:6px;font-size:11px;font-weight:500;cursor:pointer;border:1px solid var(--b);background:var(--surface);color:var(--ink2);font-family:"Noto Sans TC",sans-serif;transition:background .15s}
+.bs:hover{background:var(--bg)}.bs.p{background:var(--green);color:#fff;border-color:var(--green)}.bs.p:hover{background:#163d28}
+table{width:100%;border-collapse:collapse;font-size:13px}
+thead th{padding:9px 14px;text-align:left;font-size:10px;letter-spacing:.10em;text-transform:uppercase;color:var(--ink3);font-family:"DM Mono",monospace;font-weight:500;border-bottom:1.5px solid var(--ink);background:var(--bg);white-space:nowrap}
+th.c,td.c{text-align:center}
+tbody tr{border-bottom:1px solid var(--b2)}tbody tr:hover{background:var(--bg)}
+td{padding:9px 14px;vertical-align:middle}
+.mono{font-family:"DM Mono",monospace;font-size:12px;color:var(--ink2)}
+.bdg{display:inline-flex;padding:2px 9px;border-radius:20px;font-size:11px;font-weight:500;font-family:"DM Mono",monospace}
+.bdg.p{background:var(--gl);color:#065F46}.bdg.l{background:var(--al);color:var(--amber)}
+.empty{text-align:center;padding:48px 20px;color:var(--ink3)}
+.empty .ico{font-size:28px;margin-bottom:10px;opacity:.4}
+.empty p{font-size:13px;line-height:1.8}
+.toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%) translateY(60px);background:var(--ink);color:#fff;padding:9px 20px;border-radius:6px;font-size:12px;font-family:"DM Mono",monospace;transition:transform .25s;z-index:999;white-space:nowrap}
+.toast.show{transform:translateX(-50%) translateY(0)}
+@media(max-width:720px){.grid{grid-template-columns:1fr}}
+@media print{.topbar,.left,.acts,.toast{display:none!important}.grid{display:block}.tcard{box-shadow:none}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="topbar">
+    <div class="co">秋雨創新股份有限公司 ｜ 內部訓練簽到系統 ｜ 老師端</div>
+    <div class="steps">
+      <span class="sd on" id="d1">1</span> 設定
+      <span style="color:var(--b2)">›</span>
+      <span class="sd off" id="d2">2</span> 簽到中
+      <span style="color:var(--b2)">›</span>
+      <span class="sd off" id="d3">3</span> 完成
+    </div>
+  </div>
+  <div class="grid">
+    <div class="left">
+      <div class="card">
+        <div class="ch"><span class="ct">後端連線設定</span></div>
+        <div class="cb">
+          <div class="gas">
+            <div class="gas-l">⚙ Apps Script 網址</div>
+            <input class="gas-i" id="gas-url" placeholder="https://script.google.com/macros/s/…/exec" />
+            <div class="gas-h">從 Google 試算表 → 擴充功能 → Apps Script<br>部署 → 新增部署 → 類型：網路應用程式<br>執行身分：我 ／ 存取對象：所有人（含匿名）</div>
+          </div>
+          <button class="btn-dl" onclick="dlStudent()">⬇ 下載學員簽到頁面（student.html）</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="ch">
+          <span class="ct">課程資訊</span>
+          <span id="lock-badge" style="display:none;font-size:10px;font-family:DM Mono,monospace;color:var(--gm)">🔒 已鎖定</span>
+        </div>
+        <div class="cb">
+          <div class="field"><label>課程名稱 *</label><input id="f-course" placeholder="例：ESG 啟始會議" /></div>
+          <div class="r2">
+            <div class="field"><label>課程日期</label><input id="f-date" type="date" /></div>
+            <div class="field"><label>課程時間</label><input id="f-time" placeholder="09:00–12:00" /></div>
+          </div>
+          <div class="r2">
+            <div class="field"><label>授課講師</label><input id="f-teacher" placeholder="姓名" /></div>
+            <div class="field"><label>上課地點</label><input id="f-location" placeholder="教室" /></div>
+          </div>
+          <div class="field"><label>課程編號</label><input id="f-code" placeholder="選填" /></div>
+          <button class="btn-main" id="gen-btn" onclick="generate()">產生 QR Code，開放學員簽到</button>
+        </div>
+      </div>
+      <div class="card" id="qr-card" style="display:none">
+        <div class="ch">
+          <span class="ct">學員掃碼</span>
+          <span id="sync-lbl" style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--gm);font-family:DM Mono,monospace"><span class="live"></span>即時同步</span>
+        </div>
+        <div class="qr-area">
+          <div class="qr-box"><div id="qr-div"></div></div>
+          <div class="qr-hint">學員用手機掃此 QR Code</div>
+          <div class="sess" id="sess-disp"></div>
+          <button class="btn-copy" onclick="copyLink()">複製學員連結</button>
+        </div>
+      </div>
+      <div class="card" id="stats-card" style="display:none">
+        <div class="stats">
+          <div class="stat g"><div class="n" id="cnt-p">0</div><div class="l">出席</div></div>
+          <div class="stat a"><div class="n" id="cnt-l">0</div><div class="l">遲到</div></div>
+          <div class="stat gr"><div class="n" id="cnt-t">0</div><div class="l">合計</div></div>
+        </div>
+      </div>
+    </div>
+    <div>
+      <div class="tcard">
+        <div class="thead2">
+          <div>
+            <div class="ttitle" id="tbl-title">尚未設定課程</div>
+            <div class="tsub" id="tbl-sub">請填寫左側課程資訊並產生 QR Code</div>
+          </div>
+          <div class="acts">
+            <button class="bs" onclick="exportCSV()">匯出 CSV</button>
+            <button class="bs" onclick="window.print()">列印</button>
+            <button class="bs p" onclick="closeSession()">結束簽到</button>
+          </div>
+        </div>
+        <div id="tbl-body"><div class="empty"><div class="ico">📋</div><p>學員掃碼簽到後<br>資料會即時顯示在這裡</p></div></div>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+<script>
+const STUDENT_TPL = "<!DOCTYPE html>\n<html lang=\"zh-TW\">\n<head>\n<meta charset=\"UTF-8\">\n<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no\">\n<title>\u4e0a\u8ab2\u7c3d\u5230</title>\n<link href=\"https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=DM+Mono:wght@500&display=swap\" rel=\"stylesheet\">\n<style>\n*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}\n:root{\n  --bg:#F4F1EC;--surface:#FFF;--ink:#1C1917;--ink2:#57534E;--ink3:#A8A29E;\n  --border:rgba(28,25,23,.18);--border2:rgba(28,25,23,.08);\n  --green:#1C4532;--gl:#D1FAE5;--gm:#059669;\n  --amber:#92400E;--ab:#FEF3C7;\n}\nhtml,body{min-height:100vh;font-family:'Noto Sans TC',sans-serif;background:var(--bg);color:var(--ink)}\nbody{display:flex;flex-direction:column}\n/* top bar */\n.top{background:var(--green);color:#fff;padding:11px 18px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}\n.co{font-size:11px;letter-spacing:.08em;opacity:.8;font-family:'DM Mono',monospace}\n.badge-top{font-size:10px;background:rgba(255,255,255,.15);padding:2px 10px;border-radius:20px;font-family:'DM Mono',monospace}\n/* banner */\n.banner{background:var(--surface);border-bottom:1px solid var(--border2);padding:14px 18px;display:none}\n.b-title{font-size:17px;font-weight:700;line-height:1.3;margin-bottom:7px}\n.pills{display:flex;flex-wrap:wrap;gap:5px}\n.pill{font-size:11px;color:var(--ink2);background:var(--bg);padding:3px 9px;border-radius:20px;border:1px solid var(--border2);font-family:'DM Mono',monospace}\n/* form */\n.form-area{flex:1;padding:20px 18px 40px;max-width:480px;width:100%;margin:0 auto;display:none}\n.lbl{font-size:10px;font-weight:500;letter-spacing:.12em;text-transform:uppercase;color:var(--ink3);font-family:'DM Mono',monospace;margin-bottom:7px;margin-top:20px;display:block}\n.lbl:first-child{margin-top:0}\ninput.f,textarea.f{width:100%;padding:13px 14px;border:1.5px solid var(--border);border-radius:10px;font-size:16px;font-family:'Noto Sans TC',sans-serif;color:var(--ink);background:var(--surface);outline:none;transition:border-color .15s,box-shadow .15s;-webkit-appearance:none;display:block}\ninput.f:focus,textarea.f:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(28,69,50,.10)}\ninput.f::placeholder,textarea.f::placeholder{color:var(--ink3)}\ntextarea.f{resize:none;height:72px;font-size:14px;line-height:1.5}\ninput.f.err{border-color:#E24B4A}\n/* status */\n.sgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}\n.sopt input{display:none}\n.sopt label{display:flex;flex-direction:column;align-items:center;gap:6px;padding:14px 10px;border:1.5px solid var(--border);border-radius:10px;cursor:pointer;transition:all .15s;background:var(--surface)}\n.sopt label .ico{font-size:22px}\n.sopt label .tx{font-size:13px;font-weight:500;color:var(--ink2)}\n.sopt label .sx{font-size:10px;color:var(--ink3);font-family:'DM Mono',monospace}\n.sopt input:checked+label{border-color:var(--green);background:var(--gl)}\n.sopt input:checked+label .tx{color:var(--green)}\n.sopt.late input:checked+label{border-color:var(--amber);background:var(--ab)}\n.sopt.late input:checked+label .tx{color:var(--amber)}\n/* eval */\n.egrid{display:grid;grid-template-columns:repeat(3,1fr);gap:7px}\n.eopt input{display:none}\n.eopt label{display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 6px;border:1.5px solid var(--border);border-radius:8px;cursor:pointer;background:var(--surface);transition:all .15s;text-align:center}\n.eopt label .ei{font-size:18px}\n.eopt label .et{font-size:10px;color:var(--ink2);line-height:1.3}\n.eopt input:checked+label{border-color:var(--green);background:var(--gl)}\n.eopt input:checked+label .et{color:var(--green);font-weight:600}\n/* result */\n.rgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:7px}\n.ropt input{display:none}\n.ropt label{display:flex;align-items:center;justify-content:center;padding:10px 6px;border:1.5px solid var(--border);border-radius:8px;cursor:pointer;background:var(--surface);font-size:13px;font-weight:500;color:var(--ink2);transition:all .15s}\n.ropt input:checked+label{border-color:var(--green);background:var(--gl);color:var(--green)}\n.ropt.fail input:checked+label{border-color:#E24B4A;background:#FEE2E2;color:#991B1B}\n/* submit */\n.sub-btn{width:100%;padding:15px;background:var(--green);color:#fff;border:none;border-radius:12px;font-size:16px;font-weight:700;font-family:'Noto Sans TC',sans-serif;cursor:pointer;margin-top:24px;letter-spacing:.04em;transition:background .15s,transform .1s;-webkit-tap-highlight-color:transparent}\n.sub-btn:hover{background:#163d28}.sub-btn:active{transform:scale(.98)}.sub-btn:disabled{background:#b0b0b0;cursor:not-allowed;transform:none}\n/* success */\n.suc{display:none;flex-direction:column;align-items:center;justify-content:center;padding:40px 24px;text-align:center;flex:1;min-height:60vh}\n.suc.show{display:flex}\n.suc-ico{width:76px;height:76px;border-radius:50%;background:var(--gl);display:flex;align-items:center;justify-content:center;font-size:34px;margin-bottom:20px;animation:pop .45s cubic-bezier(.34,1.56,.64,1) both}\n@keyframes pop{from{opacity:0;transform:scale(.3)}to{opacity:1;transform:scale(1)}}\n.suc-name{font-size:22px;font-weight:700;margin-bottom:6px}\n.suc-stat{font-size:14px;color:var(--ink2);margin-bottom:4px}\n.suc-time{font-size:32px;font-weight:500;font-family:'DM Mono',monospace;color:var(--green);margin:16px 0 4px}\n.suc-date{font-size:12px;color:var(--ink3);font-family:'DM Mono',monospace;margin-bottom:24px}\n.suc-info{font-size:13px;color:var(--ink2);background:var(--bg);padding:12px 18px;border-radius:10px;max-width:300px;line-height:1.7;border:1px solid var(--border2)}\n/* error */\n.err-screen{display:none;flex-direction:column;align-items:center;justify-content:center;padding:48px 24px;text-align:center;flex:1}\n.err-screen.show{display:flex}\n.err-ico{font-size:42px;margin-bottom:16px;opacity:.5}\n.err-title{font-size:16px;font-weight:700;color:#991B1B;margin-bottom:10px}\n.err-msg{font-size:13px;color:var(--ink2);line-height:1.8}\n/* loading */\n.loading{display:flex;flex-direction:column;align-items:center;justify-content:center;flex:1;gap:12px;color:var(--ink3);font-size:13px;font-family:'DM Mono',monospace}\n.spin{width:28px;height:28px;border:2px solid var(--border);border-top-color:var(--green);border-radius:50%;animation:sp .8s linear infinite}\n@keyframes sp{to{transform:rotate(360deg)}}\n</style>\n</head>\n<body>\n<div class=\"top\">\n  <span class=\"co\">\u79cb\u96e8\u5275\u65b0\u80a1\u4efd\u6709\u9650\u516c\u53f8</span>\n  <span class=\"badge-top\">\u5167\u90e8\u8a13\u7df4\u7c3d\u5230</span>\n</div>\n\n<div class=\"loading\" id=\"loading\"><div class=\"spin\"></div>\u8f09\u5165\u8ab2\u7a0b\u8cc7\u8a0a\u4e2d\u2026</div>\n\n<div class=\"err-screen\" id=\"err-screen\">\n  <div class=\"err-ico\">\u26a0\ufe0f</div>\n  <div class=\"err-title\">\u7121\u6cd5\u8f09\u5165\u8ab2\u7a0b\u8cc7\u8a0a</div>\n  <div class=\"err-msg\" id=\"err-msg\">\u8acb\u78ba\u8a8d\u60a8\u7684 QR Code \u662f\u6700\u65b0\u7684\uff0c<br>\u6216\u8acb\u8001\u5e2b\u91cd\u65b0\u7522\u751f QR Code\u3002</div>\n</div>\n\n<div class=\"banner\" id=\"banner\">\n  <div class=\"b-title\" id=\"b-course\">\u2014</div>\n  <div class=\"pills\" id=\"b-pills\"></div>\n</div>\n\n<div class=\"form-area\" id=\"form-area\">\n  <span class=\"lbl\">\u54e1\u5de5\u59d3\u540d *</span>\n  <input class=\"f\" id=\"inp-name\" type=\"text\" placeholder=\"\u8acb\u8f38\u5165\u60a8\u7684\u59d3\u540d\" autocomplete=\"name\" />\n\n  <span class=\"lbl\">\u54e1\u5de5\u7de8\u865f</span>\n  <input class=\"f\" id=\"inp-id\" type=\"text\" placeholder=\"\u9078\u586b\" autocomplete=\"off\" />\n\n  <span class=\"lbl\">\u51fa\u5e2d\u72c0\u614b</span>\n  <div class=\"sgrid\">\n    <div class=\"sopt\">\n      <input type=\"radio\" name=\"st\" id=\"sp\" value=\"present\" checked />\n      <label for=\"sp\"><span class=\"ico\">\u2705</span><span class=\"tx\">\u6e96\u6642\u51fa\u5e2d</span><span class=\"sx\">on time</span></label>\n    </div>\n    <div class=\"sopt late\">\n      <input type=\"radio\" name=\"st\" id=\"sl\" value=\"late\" />\n      <label for=\"sl\"><span class=\"ico\">\ud83d\udd50</span><span class=\"tx\">\u9072\u5230</span><span class=\"sx\">late arrival</span></label>\n    </div>\n  </div>\n\n  <span class=\"lbl\">\u8003\u6838\u65b9\u5f0f\uff084\u5c0f\u6642\u4ee5\u4e0a\u8ab2\u7a0b\u9700\u586b\uff09</span>\n  <div class=\"egrid\">\n    <div class=\"eopt\"><input type=\"radio\" name=\"eval\" id=\"e0\" value=\"\" checked /><label for=\"e0\"><span class=\"ei\">\u2014</span><span class=\"et\">\u4e0d\u9069\u7528</span></label></div>\n    <div class=\"eopt\"><input type=\"radio\" name=\"eval\" id=\"e1\" value=\"1\" /><label for=\"e1\"><span class=\"ei\">\ud83d\udd27</span><span class=\"et\">\u5be6\u5730\u64cd\u4f5c</span></label></div>\n    <div class=\"eopt\"><input type=\"radio\" name=\"eval\" id=\"e2\" value=\"2\" /><label for=\"e2\"><span class=\"ei\">\ud83d\udcdd</span><span class=\"et\">\u96a8\u5802\u6e2c\u9a57</span></label></div>\n    <div class=\"eopt\"><input type=\"radio\" name=\"eval\" id=\"e3\" value=\"3\" /><label for=\"e3\"><span class=\"ei\">\ud83d\udcac</span><span class=\"et\">\u5fc3\u5f97\u767c\u8868</span></label></div>\n    <div class=\"eopt\"><input type=\"radio\" name=\"eval\" id=\"e4\" value=\"4\" /><label for=\"e4\"><span class=\"ei\">\ud83d\udde3\ufe0f</span><span class=\"et\">\u5ea7\u8ac7\u6703</span></label></div>\n  </div>\n\n  <span class=\"lbl\">\u8003\u6838\u7d50\u679c\uff084\u5c0f\u6642\u4ee5\u4e0a\u8ab2\u7a0b\u9700\u586b\uff09</span>\n  <div class=\"rgrid\">\n    <div class=\"ropt\"><input type=\"radio\" name=\"res\" id=\"rn\" value=\"\" checked /><label for=\"rn\">\u2014 \u4e0d\u9069\u7528</label></div>\n    <div class=\"ropt\"><input type=\"radio\" name=\"res\" id=\"rp\" value=\"\u5408\u683c\" /><label for=\"rp\">\u2713 \u5408\u683c</label></div>\n    <div class=\"ropt fail\"><input type=\"radio\" name=\"res\" id=\"rf\" value=\"\u4e0d\u5408\u683c\" /><label for=\"rf\">\u2717 \u4e0d\u5408\u683c</label></div>\n  </div>\n\n  <span class=\"lbl\">\u5099\u8a3b</span>\n  <textarea class=\"f\" id=\"inp-note\" placeholder=\"\u9078\u586b\uff08\u4f8b\uff1a\u63d0\u65e9\u96e2\u958b\u539f\u56e0\u7b49\uff09\"></textarea>\n\n  <button class=\"sub-btn\" id=\"sub-btn\" onclick=\"doSubmit()\">\u78ba\u8a8d\u7c3d\u5230</button>\n</div>\n\n<div class=\"suc\" id=\"suc\">\n  <div class=\"suc-ico\">\u2713</div>\n  <div class=\"suc-name\" id=\"suc-name\">\u2014</div>\n  <div class=\"suc-stat\" id=\"suc-stat\">\u7c3d\u5230\u6210\u529f</div>\n  <div class=\"suc-time\" id=\"suc-time\">\u2014</div>\n  <div class=\"suc-date\" id=\"suc-date\">\u2014</div>\n  <div class=\"suc-info\" id=\"suc-info\">\u2014</div>\n</div>\n\n<script>\n// \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\n//  GAS_URL \u7531 teacher.html \u4e0b\u8f09\u6642\u81ea\u52d5\u586b\u5165\n//  \u8acb\u52ff\u624b\u52d5\u4fee\u6539\u6b64\u884c\n// \u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\nconst GAS_URL = '%%GAS_URL%%';\n\nlet meta = null;\nconst pad = n => n < 10 ? '0' + n : n;\nconst nowTime = () => { const d=new Date(); return pad(d.getHours())+':'+pad(d.getMinutes()); };\nconst nowDate = () => { const d=new Date(); return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate()); };\n\nfunction showErr(msg) {\n  document.getElementById('loading').style.display = 'none';\n  document.getElementById('err-msg').innerHTML = msg || '\u8acb\u78ba\u8a8d QR Code \u662f\u6700\u65b0\u7684\uff0c\u6216\u8acb\u8001\u5e2b\u91cd\u65b0\u7522\u751f\u3002';\n  document.getElementById('err-screen').classList.add('show');\n}\n\nfunction init() {\n  try {\n    const h = location.hash.slice(1);\n    if (!h) throw new Error('\u7f3a\u5c11\u8ab2\u7a0b\u8cc7\u8a0a\uff0c\u8acb\u6383\u63cf\u6b63\u78ba\u7684 QR Code\u3002');\n    meta = JSON.parse(decodeURIComponent(escape(atob(h))));\n    if (!GAS_URL || GAS_URL === '%%GAS_URL%%') throw new Error('\u5c1a\u672a\u8a2d\u5b9a\u5f8c\u7aef\u7db2\u5740\uff0c\u8acb\u8acb\u8001\u5e2b\u91cd\u65b0\u4e0b\u8f09 student.html\u3002');\n\n    document.getElementById('loading').style.display = 'none';\n    document.getElementById('b-course').textContent = meta.course || '\uff08\u672a\u547d\u540d\u8ab2\u7a0b\uff09';\n    const pills = [];\n    if (meta.date)     pills.push('\ud83d\udcc5 ' + meta.date);\n    if (meta.time)     pills.push('\ud83d\udd50 ' + meta.time);\n    if (meta.teacher)  pills.push('\ud83d\udc64 ' + meta.teacher);\n    if (meta.location) pills.push('\ud83d\udccd ' + meta.location);\n    document.getElementById('b-pills').innerHTML = pills.map(p => '<span class=\"pill\">'+p+'</span>').join('');\n    document.getElementById('banner').style.display = 'block';\n    document.getElementById('form-area').style.display = 'block';\n    setTimeout(() => document.getElementById('inp-name').focus(), 300);\n  } catch(e) {\n    showErr(e.message);\n  }\n}\n\nasync function doSubmit() {\n  const name = document.getElementById('inp-name').value.trim();\n  if (!name) {\n    const el = document.getElementById('inp-name');\n    el.classList.add('err'); el.focus();\n    setTimeout(() => el.classList.remove('err'), 1800);\n    return;\n  }\n  const btn = document.getElementById('sub-btn');\n  btn.disabled = true; btn.textContent = '\u9001\u51fa\u4e2d\u2026';\n\n  const payload = {\n    action:     'checkin',\n    sessionId:  meta.sessionId,\n    name,\n    empId:      document.getElementById('inp-id').value.trim(),\n    status:     document.querySelector('input[name=\"st\"]:checked').value,\n    evalMethod: document.querySelector('input[name=\"eval\"]:checked').value,\n    evalResult: document.querySelector('input[name=\"res\"]:checked').value,\n    note:       document.getElementById('inp-note').value.trim(),\n    time:       nowTime(),\n    date:       nowDate(),\n    course:     meta.course,\n    courseDate: meta.date,\n    courseTime: meta.time,\n    teacher:    meta.teacher,\n    location:   meta.location,\n    code:       meta.code\n  };\n\n  try {\n    const r = await fetch(GAS_URL, { method: 'POST', body: JSON.stringify(payload) });\n    const j = await r.json();\n    if (!j.ok) throw new Error(j.error || '\u4f3a\u670d\u5668\u932f\u8aa4');\n  } catch(err) {\n    btn.disabled = false; btn.textContent = '\u78ba\u8a8d\u7c3d\u5230';\n    alert('\u7c3d\u5230\u5931\u6557\uff1a' + err.message + '\\n\\n\u8acb\u78ba\u8a8d\u7db2\u8def\u9023\u7dda\uff0c\u6216\u901a\u77e5\u8001\u5e2b\u3002');\n    return;\n  }\n\n  document.getElementById('banner').style.display = 'none';\n  document.getElementById('form-area').style.display = 'none';\n  document.getElementById('suc-name').textContent  = name;\n  document.getElementById('suc-stat').textContent  = payload.status === 'present' ? '\u2713 \u5df2\u51fa\u5e2d' : '\u5df2\u8a18\u9304\u70ba\u9072\u5230';\n  document.getElementById('suc-time').textContent  = payload.time;\n  document.getElementById('suc-date').textContent  = payload.date;\n  document.getElementById('suc-info').innerHTML    = '<strong>' + meta.course + '</strong><br>' +\n    [meta.date, meta.teacher, meta.location].filter(Boolean).join('\u3000');\n  document.getElementById('suc').classList.add('show');\n}\n\ninit();\n</script>\n</body>\n</html>\n";
+
+let sid=null,timer=null,records=[],gasUrl='',stuUrl='';
+const pad=n=>n<10?'0'+n:n;
+const d=new Date();
+document.getElementById('f-date').value=d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
+const _saved=localStorage.getItem('__gasUrl');
+if(_saved)document.getElementById('gas-url').value=_saved;
+document.getElementById('gas-url').addEventListener('input',function(){localStorage.setItem('__gasUrl',this.value);});
+
+function dlStudent(){
+  const url=document.getElementById('gas-url').value.trim();
+  if(!url||!url.startsWith('http')){showToast('請先填寫正確的 Apps Script 網址');return;}
+  const patched=STUDENT_TPL.replace("'%%GAS_URL%%'",JSON.stringify(url));
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([patched],{type:'text/html;charset=utf-8'}));
+  a.download='student.html';a.click();
+  showToast('✓ student.html 已下載，請放在同一個資料夾');
+}
+
+async function generate(){
+  const course=document.getElementById('f-course').value.trim();
+  gasUrl=document.getElementById('gas-url').value.trim();
+  if(!course){showToast('請填寫課程名稱');return;}
+  if(!gasUrl||!gasUrl.startsWith('http')){showToast('請填寫正確的 Apps Script 網址');return;}
+  const btn=document.getElementById('gen-btn');
+  btn.disabled=true;btn.textContent='連線中…';
+  sid='sess_'+Date.now().toString(36)+Math.random().toString(36).slice(2,5);
+  const meta={course,sessionId:sid,
+    date:document.getElementById('f-date').value,
+    time:document.getElementById('f-time').value.trim(),
+    teacher:document.getElementById('f-teacher').value.trim(),
+    location:document.getElementById('f-location').value.trim(),
+    code:document.getElementById('f-code').value.trim()};
+  try{
+    const r=await fetch(gasUrl,{method:'POST',body:JSON.stringify({action:'init',sessionId:sid})});
+    const j=await r.json();
+    if(!j.ok)throw new Error(j.error);
+  }catch(err){
+    showToast('無法連線：'+err.message);
+    btn.disabled=false;btn.textContent='產生 QR Code，開放學員簽到';return;
+  }
+  const shortMeta={course:meta.course,date:meta.date,time:meta.time,
+    teacher:meta.teacher,location:meta.location,code:meta.code,sessionId:sid};
+  const hash=btoa(unescape(encodeURIComponent(JSON.stringify(shortMeta))));
+  stuUrl=location.href.replace(/[^/]*$/,'')+('student.html#'+hash);
+  document.getElementById('qr-div').innerHTML='';
+  new QRCode(document.getElementById('qr-div'),{text:stuUrl,width:200,height:200,
+    colorDark:'#1C1917',colorLight:'#fff',correctLevel:QRCode.CorrectLevel.M});
+  document.getElementById('sess-disp').textContent='Session: '+sid;
+  document.getElementById('qr-card').style.display='block';
+  document.getElementById('stats-card').style.display='block';
+  document.getElementById('lock-badge').style.display='inline';
+  ['f-course','f-date','f-time','f-teacher','f-location','f-code']
+    .forEach(id=>document.getElementById(id).setAttribute('readonly',true));
+  document.getElementById('gas-url').setAttribute('readonly',true);
+  btn.textContent='✓ 簽到已開放';
+  document.getElementById('tbl-title').textContent=course;
+  document.getElementById('tbl-sub').textContent=
+    [meta.date,meta.time,meta.teacher,meta.location].filter(Boolean).join('　');
+  document.getElementById('d1').className='sd done';
+  document.getElementById('d2').className='sd on';
+  if(timer)clearInterval(timer);
+  timer=setInterval(sync,3000);sync();
+  showToast('✓ QR Code 產生成功，等待學員掃碼');
+}
+
+async function sync(){
+  if(!sid||!gasUrl)return;
+  try{
+    const r=await fetch(gasUrl+'?action=getRecords&sessionId='+sid);
+    const data=await r.json();
+    if(data.ok){
+      records=data.records||[];
+      renderTable();
+      document.getElementById('cnt-p').textContent=records.filter(r=>r.status==='出席').length;
+      document.getElementById('cnt-l').textContent=records.filter(r=>r.status==='遲到').length;
+      document.getElementById('cnt-t').textContent=records.length;
+      const sl=document.getElementById('sync-lbl');
+      sl.innerHTML='<span class="live"></span>即時同步';
+      sl.style.color='var(--gm)';
+    }
+  }catch(e){
+    const sl=document.getElementById('sync-lbl');
+    sl.innerHTML='<span style="width:7px;height:7px;border-radius:50%;background:#E24B4A;display:inline-block"></span> 同步失敗';
+    sl.style.color='#E24B4A';
+  }
+}
+
+function renderTable(){
+  const el=document.getElementById('tbl-body');
+  if(!records.length){
+    el.innerHTML='<div class="empty"><div class="ico">📱</div><p>等待學員掃碼簽到中…</p></div>';return;
+  }
+  let html='<table><thead><tr>'
+    +'<th class="c" style="width:44px">#</th><th>員工姓名</th><th>員工編號</th>'
+    +'<th class="c">狀態</th><th class="c">考核方式</th>'
+    +'<th class="c">考核結果</th><th class="c">時間</th><th>備註</th>'
+    +'</tr></thead><tbody>';
+  records.forEach(r=>{
+    html+='<tr>'
+      +'<td class="c mono">'+r.no+'</td>'
+      +'<td><strong>'+r.name+'</strong></td>'
+      +'<td class="mono">'+(r.empId||'—')+'</td>'
+      +'<td class="c"><span class="bdg '+(r.status==='出席'?'p':'l')+'">'+r.status+'</span></td>'
+      +'<td class="c mono">'+(r.evalMethod||'—')+'</td>'
+      +'<td class="c mono">'+(r.evalResult||'—')+'</td>'
+      +'<td class="c mono">'+r.time+'</td>'
+      +'<td style="font-size:12px;color:var(--ink2)">'+(r.note||'')+'</td>'
+      +'</tr>';
+  });
+  el.innerHTML=html+'</tbody></table>';
+}
+
+function closeSession(){
+  if(timer)clearInterval(timer);
+  document.getElementById('d2').className='sd done';
+  document.getElementById('d3').className='sd on';
+  showToast('簽到已結束');
+}
+function copyLink(){
+  if(!stuUrl)return;
+  navigator.clipboard.writeText(stuUrl).then(()=>showToast('學員連結已複製'));
+}
+function exportCSV(){
+  if(!records.length){showToast('尚無資料');return;}
+  const course=document.getElementById('f-course').value;
+  const date=document.getElementById('f-date').value;
+  const teacher=document.getElementById('f-teacher').value;
+  let csv='\uFEFF課程名稱,'+course+'\n日期,'+date+'\n授課講師,'+teacher+'\n\n';
+  csv+='序號,員工姓名,員工編號,狀態,考核方式,考核結果,簽到時間,備註\n';
+  records.forEach(r=>{
+    csv+=[r.no,r.name,r.empId||'',r.status,r.evalMethod||'',r.evalResult||'',r.time,r.note||''].join(',')+'\n';
+  });
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));
+  a.download='簽到紀錄_'+course+'_'+date+'.csv';
+  a.click();showToast('CSV 已下載');
+}
+function showToast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.classList.add('show');
+  clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),2600);
+}
+window.addEventListener('focus',()=>{if(sid)sync();});
+</script>
+</body>
+</html>
